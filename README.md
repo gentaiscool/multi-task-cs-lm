@@ -3,11 +3,11 @@ The implementation of <a href="https://arxiv.org/abs/1805.12070">Code-Switching 
 
 <img src="img/multi-task-model.jpg" width=300>
 
-### Prerequisites:
+## Prerequisites:
 - Python 3.X
 - Pytorch 0.2.X (or later)
 
-### Run the code:
+## Run the code:
 
 <b>Multi-task</b>
 ```
