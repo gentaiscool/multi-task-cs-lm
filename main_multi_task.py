@@ -9,7 +9,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch import optim
 
-import data_multi_task as data
+import util.data_multi_task as data
 import model.multi_task_model as model
 
 import util.printhelper as printhelper

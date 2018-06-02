@@ -9,7 +9,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch import optim
 
-import data
+import util.data as data
 from model.rnn_model import *
 
 import util.printhelper as printhelper

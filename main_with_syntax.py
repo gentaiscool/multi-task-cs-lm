@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch import optim
 
-import data_with_syntax as data
+import util.data_with_syntax as data
 import model.rnn_with_syntax_model as model
 
 import util.printhelper as printhelper
