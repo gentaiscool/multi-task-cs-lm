@@ -1,5 +1,5 @@
 # Code-Switching Language Modeling using Syntax-Aware Multi-Task Learning
-The implementation of <a href="https://arxiv.org/abs/1805.12070">Code-Switching Language Modeling using Syntax-Aware Multi-Task Learning</a> ("3rd Workshop in Computational Approaches in Linguistic Code-switching", ACL 2018) paper. The code is written in Python using Pytorch.
+The implementation of <a href="https://arxiv.org/abs/1805.12070">Code-Switching Language Modeling using Syntax-Aware Multi-Task Learning</a> (3rd Workshop in Computational Approaches in Linguistic Code-switching, ACL 2018) paper. The code is written in Python using Pytorch.
 
 ### Prerequisites:
 - Python 3.X
