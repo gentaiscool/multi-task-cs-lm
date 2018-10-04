@@ -1,6 +1,8 @@
 # Code-Switching Language Modeling using Syntax-Aware Multi-Task Learning
 The implementation of <a href="http://aclweb.org/anthology/W18-3207">Code-Switching Language Modeling using Syntax-Aware Multi-Task Learning</a> (3rd Workshop in Computational Approaches in Linguistic Code-switching, ACL 2018) paper. The code is written in Python using Pytorch.
 
+Supplementary Materials (including the distribution of train, dev, and test) can be found <a href="https://github.com/gentaiscool/multi-task-cs-lm/blob/master/doc/supplementary-materials-code.pdf">here</a>.
+
 If you are using the code in your work, please cite the following
 ```
 @InProceedings{W18-3207,
