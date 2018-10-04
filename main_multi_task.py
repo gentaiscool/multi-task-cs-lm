@@ -14,7 +14,7 @@ import model.multi_task_model as model
 
 import util.printhelper as printhelper
 
-parser = argparse.ArgumentParser(description='PyTorch SEAME RNN/LSTM postaguage Model')
+parser = argparse.ArgumentParser(description='PyTorch SEAME RNN/LSTM Language Model')
 parser.add_argument('--name', type=str, default='',
                     help='name')
 parser.add_argument('--data', type=str, default='../data/seame_phase2',
@@ -44,13 +44,11 @@ parser.add_argument('--batch_size', type=int, default=20, metavar='N',
 parser.add_argument('--bptt', type=int, default=35,
                     help='sequence length')
 parser.add_argument('--dropout', type=float, default=0.2,
-                    help='dropout applied to layers (0 = no dropout)')
+                    help='dropout applied to lm rnn layers (0 = no dropout)')
 parser.add_argument('--postagdropout', type=float, default=0.2,
-                    help='dropout applied to layers (0 = no dropout)')
-parser.add_argument('--alpha', type=float, default=1.0,
+                    help='dropout applied to postag rnn layers (0 = no dropout)')
+parser.add_argument('--p', type=float, default=1.0,
                     help='ratio loss lm')
-parser.add_argument('--beta', type=float, default=1.0,
-                    help='ratio loss pos tag')
 parser.add_argument('--tied', action='store_true',
                     help='tie the word embedding and softmax weights')
 parser.add_argument('--seed', type=int, default=1111,
@@ -64,17 +62,15 @@ parser.add_argument('--save', type=str,  default='./model',
                     help='path to save the final model')
 args = parser.parse_args()
 
-alpha = float(args.alpha)
-beta = float(args.beta)
+alpha = float(args.p)
+beta = 1.0 - float(args.p)
 
 log_name = str(args.name) + "_model" + str(args.model) + "_alpha" + str(args.alpha) + "_beta" + str(args.beta) + "_clip" + str(args.clip) + "_layers" + str(args.nlayers) + "_nhid" + str(args.nhid) + "_emsize" + str(args.emsize) + "_postagemsize" + str(args.postagemsize) + ".txt"
 log_file = open(args.log_path + "/" + log_name, "w+")
 
 save_path = args.save + "/" + log_name + ".pt"
-
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-# Set the random seed manually for reproducibility.
 torch.manual_seed(args.seed)
 if torch.cuda.is_available():
     if not args.cuda:
@@ -153,14 +149,12 @@ def repackage_hidden(h):
     else:
         return tuple(repackage_hidden(v) for v in h)
 
-
 def get_batch(source, i, evaluation=False):
     seq_len = min(args.bptt, len(source) - 1 - i)
     data = Variable(source[i:i+seq_len], volatile=evaluation)
     target = Variable(source[i+1:i+1+seq_len].view(-1))
     return data, target
 
-# print the result
 word2idx = corpus.dictionary.word2idx
 idx2word = corpus.dictionary.idx2word
 pos2idx = corpus.dictionary.pos2idx
@@ -177,7 +171,6 @@ for j in range(num_word):
         english_word[j] = True
 
 def evaluate(data_source, data_source_postag, type_evaluation="val"):
-    # Turn on evaluation mode which disables dropout.
     model.eval()
     total_loss = 0
     ntokens = len(corpus.dictionary)
@@ -192,13 +185,9 @@ def evaluate(data_source, data_source_postag, type_evaluation="val"):
         data, targets = get_batch(data_source, i, evaluation=True)
         data_postag, targets_postag = get_batch(data_source_postag, i, evaluation=True)
 
-        output, postag_output, hidden, hidden_postag = model(data, data_postag, hidden, hidden_postag)
-        # output, hidden, attn = model(data, data_postag, hidden)
-        
-        # print(data.size(), postag_output.size())
-        # data (batch_size, seq_len), postag_output (batch_size, seq_len, labels)
-        
+        output, postag_output, hidden, hidden_postag = model(data, data_postag, hidden, hidden_postag) # data (batch_size, seq_len), postag_output (batch_size, seq_len, labels)
         num_postag = corpus.dictionary.get_postag_len()
+
         english_postag = {}
         chinese_postag = {}
         for j in range(num_postag):
@@ -231,40 +220,14 @@ def evaluate(data_source, data_source_postag, type_evaluation="val"):
                             zh_val += pow(math.e, postag[l].data[0])
 
                     word_dist = output[j][k]
-                    # for l in range(len(word_dist)):
-                    #     if l in english_word:
-                    #         en_word_val += pow(math.e, word_dist[l].data[0])
-                    #     else:
-                    #         zh_word_val += pow(math.e, word_dist[l].data[0])
-                    # file_out.write(idx2word[data[j][k].data[0]] + "\t" + idx2word[data[j+1][k].data[0]] + "\t" + str(en_word_val) + "\t" + str(zh_word_val) + "\t" + str(en_val) + "\t" + str(zh_val) + "\n")
-
+                
                     target_batch = targets.view(seq_len, batch_size)
                     target_word = target_batch[j][k].data[0]
                     word_val = pow(math.e, word_dist[target_word].data[0])
                     word_val_log = word_dist[target_word].data[0]
-                    # word_dist, word_dist_idx = torch.topk(output[j][k], 1000, dim=-1)
-                    # for l in range(len(word_dist)):
-                    #     idx = word_dist_idx[l].data[0]
-                    #     if idx in english_word:
-                    #         en_word_val += pow(math.e, word_dist[l].data[0])
-                    #     else:
-                    #         zh_word_val += pow(math.e, word_dist[l].data[0])
 
                     file_out.write(idx2word[data[j][k].data[0]] + "\t" + idx2word[data[j+1][k].data[0]] + "\t" + str(word_val) + "\t" + str(word_val_log) + "\t" + str(en_val) + "\t" + str(zh_val) + "\n")
                 file_out.write("\n")
-            # print()
-
-        # print(data.size())
-        # for j in range(len(data)):
-            
-        #     # print(postag_output[0].size())
-        #     # topv, topk = torch.topk(postag_output[j][0], 3, dim=-1)
-        #     # print(data[0][j].data[0])
-        #     # print(topk[j].data[0])
-        #     # print(topk)
-        #     print(idx2word[data[j][0].data[0]], idx2pos[topk[0].data[0]], idx2pos[topk[1].data[0]], idx2pos[topk[2].data[0]])
-        # print()
-        # print(data.size(), postag_output.size())
 
         output_flat = output.view(-1, ntokens)
         total_loss += len(data) * criterion(output_flat, targets).data
@@ -360,7 +323,6 @@ with open(save_path, 'rb') as f:
     model = torch.load(f)
 
 # Run on test data.
-# test_loss = evaluate_per_sequence(test_sequence_data)
 test_loss = evaluate(test_data, test_postag_data, "test")
 
 log = ('=' * 89) + '| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
